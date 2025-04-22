@@ -1,0 +1,152 @@
+#+MACRO: LN @@latex:\\@@ @@html:<br>@@ @@ascii:|@@
+
+#+TITLE: Builder Week {{{LN}}} Day 1
+#+OPTIONS: toc:nil
+#+REVEAL_PLUGINS: (highlight notes)
+#+REVEAL_THEME: white
+#+REVEAL_INIT_OPTIONS: transition: 'none'
+
+* Builder Week Agenda
+Everything is to be modified. Feel free to make any suggestions!
+
+_Underlined item is advanced topic_
+** Day 1
+- Review Blockchain / Cardano
+- Environment setup (Lucid)
+- _Offchain techniques_
+- _Smart Contract Deep Dive_
+** Day 2
+- Smart Contracts
+- Protocol Development
+- _Testing Strategies_
+- _Script Execution Cost_
+** Day 3
+- Offchain Development
+- Offchain Service Components
+- On/Offchain scope and distinction
+- _Onchain primitive operations_
+** Day 4
+- Decentrailized App Design
+- Chain Follower/Indexer
+- _Onchain Design Patterns_
+- _Onchain Script Optimization_
+** Day 5
+- Hackathon/Workday
+- Suggested Topics
+
+* Cardano
+- Proof of Stakes
+  #+BEGIN_NOTES
+  Staking pools
+
+  Controlling 51% of all Ada in circulation is infeasible. ~$10B
+  #+END_NOTES
+- EUTXO
+  - Determinism
+  - Concurrency
+  - Tractability
+  - "Cleaner" ledger
+- High-Decentralization
+- Powerful Smart Contracts
+
+** Smart Contracts
+#+BEGIN_NOTES
+  EUTXO -> Same address multiple "endpoints" -> parallelism
+
+  Deterministic script execution
+
+  "functional" VM -> Functional IR allows stronger mathematical reasoning
+
+  https://github.com/Anastasia-Labs/coq-uplc
+#+END_NOTES
+** Cardano Nodes
+#+BEGIN_NOTES
+
+#+END_NOTES
+
+* Demo
+- Setup BlockFrost
+- Setup Lucid-Evolution
+- Send Transactions to Preview Net
+
+** Team
+#+BEGIN_NOTES
+g1
+Open Food Chain (Non Cardano Native)
+Tx Pipe (Very Technical)
+
+g2
+Automation ZK (Non Cardano Native)
+Kora Labs (Very Technical)
+#+END_NOTES
+*** Group 1
+  - Open Food Chain
+  - Tx Pipe
+  - DirectEd
+  - AD Labs/Gero Wallet
+  - ZK Fold
+
+*** Group 2
+  - Automation ZK
+  - Kora Labs
+  - Socious
+  - Bodega
+  - Crashr
+
+** Team
+#+BEGIN_NOTES
+g3
+Rosen Bridge Technology (Non Cardano Native)
+Fluid Tokens (Very Technical)
+
+g4
+XBeeFi (Non Cardano Native)
+Vespr (Very Technical)
+#+END_NOTES
+*** Group 3
+  - Rosen Bridge Technology
+  - Fluid Tokens
+  - Clay House
+  - Delta Defi
+  - W Seeds
+
+*** Group 4
+  - XBeeFi
+  - Vespr
+  - Sundial
+  - Clarity
+  - Cur8
+
+* Advanced Offchain Topics
+** minimizing transaction size
+#+BEGIN_NOTES
+reference scripts
+datum format optimization: constr vs list
+#+END_NOTES
+** custom coin/utxo selection
+** dynamic redeemer construction
+
+* Onchain Deep Dive
+** UPLC
+- Lambda Calculus
+- Strict
+- "Effectful"
+#+BEGIN_NOTES
+  https://plutus.cardano.intersectmbo.org/resources/plutus-core-spec.pdf
+
+  Deterministic evaluation
+
+  Ledger API <-> UPLC version <-> Protocol Version
+#+END_NOTES
+** Execution Budget
+** Optimization Strategies
+#+BEGIN_NOTES
+Finding duplicated work
+
+Strictness
+
+"Unrolling" Meta progarmming
+
+"Hinting" from the offchain <- to be discussed later
+
+#+END_NOTES

@@ -1,0 +1,17 @@
+.direnv/
+*~
+
+node_modules/
+dist/
+**/#*#
+.clinic
+.#*
+
+coverage/
+
+build/
+.env
+.env*
+
+docs/
+/.idea/*

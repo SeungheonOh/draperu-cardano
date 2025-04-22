@@ -1,0 +1,63 @@
+{
+  "preamble": {
+    "title": "sho/day1-onchain",
+    "description": "Aiken contracts for project 'sho/day1-onchain'",
+    "version": "0.0.0",
+    "plutusVersion": "v3",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.1.5+unknown"
+    },
+    "license": "Apache-2.0"
+  },
+  "validators": [
+    {
+      "title": "always_fail.hello_world.spend",
+      "datum": {
+        "title": "datum",
+        "schema": {
+          "$ref": "#/definitions/Void"
+        }
+      },
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/Void"
+        }
+      },
+      "compiledCode": "58a6010100323232323232253330023232323232325323330093370e900100109919191932999806180218069baa0071533300f300e375400e2930b0b18079808001180700098059baa003153330093001002132326533300a3002300b375400a2a66601a60186ea80145261616375c601a60166ea800c58dc3a400060106ea8004c028c02c008c024004c024008c01c004c010dd50008a4c26cacae6955ceaab9e5573eae855d11",
+      "hash": "a3f52bcda5703fbc1a6979a9513320e22b359e05cf7f0a9ffab262ce"
+    },
+    {
+      "title": "always_fail.hello_world.mint",
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/Void"
+        }
+      },
+      "compiledCode": "58a6010100323232323232253330023232323232325323330093370e900100109919191932999806180218069baa0071533300f300e375400e2930b0b18079808001180700098059baa003153330093001002132326533300a3002300b375400a2a66601a60186ea80145261616375c601a60166ea800c58dc3a400060106ea8004c028c02c008c024004c024008c01c004c010dd50008a4c26cacae6955ceaab9e5573eae855d11",
+      "hash": "a3f52bcda5703fbc1a6979a9513320e22b359e05cf7f0a9ffab262ce"
+    },
+    {
+      "title": "always_fail.hello_world.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "compiledCode": "58a6010100323232323232253330023232323232325323330093370e900100109919191932999806180218069baa0071533300f300e375400e2930b0b18079808001180700098059baa003153330093001002132326533300a3002300b375400a2a66601a60186ea80145261616375c601a60166ea800c58dc3a400060106ea8004c028c02c008c024004c024008c01c004c010dd50008a4c26cacae6955ceaab9e5573eae855d11",
+      "hash": "a3f52bcda5703fbc1a6979a9513320e22b359e05cf7f0a9ffab262ce"
+    }
+  ],
+  "definitions": {
+    "Void": {
+      "title": "Unit",
+      "anyOf": [
+        {
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Builder Week  <br>  Day 2</title>
+<meta name="author" content=""/>
+<meta name="description" content=""/>
+<meta name="keywords" content=""/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="./reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="./reveal.js/dist/theme/white.css" id="theme"/>
+
+<link rel="stylesheet" href="./reveal.js/plugin/highlight/zenburn.css"/></head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Builder Week  <br>  Day 2</h1><p class="subtitle"></p>
+<p class="date">Created: 2025-04-22 Tue 11:22</p>
+</section>
+<section>
+<section id="slide-org8ec8db2">
+<h2 id="org8ec8db2"><span class="section-number-2">1.</span> Agenda</h2>
+<ul>
+<li>Smart Contracts</li>
+<li>Protocol Development</li>
+<li><span class="underline">Testing Strategies</span></li>
+<li><span class="underline">Script Execution Cost</span></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org6bb58a7">
+<h2 id="org6bb58a7"><span class="section-number-2">2.</span> Smart Contracts</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+</section>
+<section id="slide-orgd4fb3e7">
+<h3 id="orgd4fb3e7"><span class="section-number-3">2.1.</span> What is smart contract?</h3>
+<aside class="notes">
+<p>
+"casher" in banks; they will give("release") assets if everything
+checks out
+</p>
+
+<p>
+connect notepad, draw diagrams
+</p>
+
+</aside>
+</section>
+<section id="slide-org89def08">
+<h3 id="org89def08"><span class="section-number-3">2.2.</span> UPLC</h3>
+<pre  class="example" >
+Term L, M, N :=
+    x                      // variable
+   (con T c)               // constant
+   (builtin b)             // builtin
+   (lam x M)               // lambda abstraction
+   [M N]                   // function application
+   (delay M)               // delay execution of a term
+   (force M)               // force execution of a term
+   (constr k M0 ... Mm-1)  // constr with tag k and m arguments
+   (case M N0 ... Nm-1)    // case analysis with m alternatives
+   (error)                 // error
+</pre>
+</section>
+<section id="slide-org2675811">
+<h3 id="org2675811"><span class="section-number-3">2.3.</span> UPLC - Example</h3>
+<pre  class="example" >
+(program 1.1.0
+  (lam x
+    (force
+      [(force (builtin IfThenElse))
+        [(builtin EqualsInteger) x (con integer 42)]
+        (delay (con unit))
+        (delay (error))
+      ]
+    )
+  )
+)
+</pre>
+<aside class="notes">
+<p>
+Returns unit if given argument is 42, fails if it is not.
+note the use of force and delay.
+</p>
+
+</aside>
+</section>
+<section id="slide-org3be378d">
+<h3 id="org3be378d"><span class="section-number-3">2.4.</span> UPLC - Flat Encoding</h3>
+<pre  class="example" >
+5201010025980099b870014815229345957341
+</pre>
+<pre  class="example" >
+-- version
+00000001
+00000001
+00000000
+
+0010                                  -- lambda abstraction
+  0101                                -- force
+    0011                              -- apply
+      0011                            -- apply
+        0011                          -- apply
+          0101                        -- force
+            0111 0011010              -- builtin IfThenElse
+          0011                        -- apply
+            0011                      -- apply
+              0111 0000111            -- builtin EqualsInteger
+              0000 00000001           -- variable index 1
+            0100 1 0000 0010101 00    -- constant integer 42
+          0001                        -- delay
+            0100 1 0011 0             -- constant unit
+        0001                          -- delay
+          0110                        -- error
+000001 -- padding
+</pre>
+
+<p>
+Pretty simple :)
+</p>
+
+<aside class="notes">
+<p>
+Smart contracts are encoded in binary flat serialization format,
+that's what ledger stores.
+</p>
+
+</aside>
+</section>
+</section>
+<section>
+<section id="slide-org2b637da">
+<h2 id="org2b637da"><span class="section-number-2">3.</span> Smart Contract Development with Aiken</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+</section>
+<section id="slide-org24569e6">
+<h3 id="org24569e6"><span class="section-number-3">3.1.</span> Aiken Setup</h3>
+<p>
+<a href="https://aiken-lang.org/installation-instructions">https://aiken-lang.org/installation-instructions</a>
+</p>
+
+<div class="org-src-container">
+
+<pre   ><code class="bash" ># Linux / MacOS
+curl --proto '=https' --tlsv1.2 -LsSf https://install.aiken-lang.org | sh
+
+# Windows
+powershell -c "irm https://windows.aiken-lang.org | iex"
+</code></pre>
+</div>
+</section>
+<section id="slide-org85a5669">
+<h3 id="org85a5669"><span class="section-number-3">3.2.</span> Initializing Aiken Project</h3>
+<div class="org-src-container">
+
+<pre   ><code class="bash" >aiken new &lt;your_name&gt;/&lt;project_name&gt;
+</code></pre>
+</div>
+</section>
+<section id="slide-orga7d0efe">
+<h3 id="orga7d0efe"><span class="section-number-3">3.3.</span> House Keeping</h3>
+<div class="org-src-container">
+
+<pre   ><code class="bash" ># Regular build
+aiken build
+
+# To make it re-run everytime new changes are made
+aiken build -w
+
+# Just run type checker
+aiken check
+</code></pre>
+</div>
+</section>
+<section id="slide-org937daab">
+<h3 id="org937daab"><span class="section-number-3">3.4.</span> Documentations</h3>
+<p>
+Other language/LSP/package manager features can be found on
+</p>
+
+<p>
+<a href="https:www.aiken-lang.org">https:www.aiken-lang.org</a>
+</p>
+
+<p>
+To try Aiken without local installation, you can try
+</p>
+
+<p>
+<a href="http:play.aiken-lang.org">http:play.aiken-lang.org</a>
+</p>
+</section>
+</section>
+<section>
+<section id="slide-orgdb516bb">
+<h2 id="orgdb516bb"><span class="section-number-2">4.</span> NFT script</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-orge056986">
+<h2 id="orge056986"><span class="section-number-2">5.</span> "Stable Coin" (from PPP)</h2>
+<div class="outline-text-2" id="text-5">
+</div>
+</section>
+<section id="slide-orgb806bba">
+<h3 id="orgb806bba"><span class="section-number-3">5.1.</span> Activity</h3>
+</section>
+<section id="slide-orga46dc36">
+<h3 id="orga46dc36"><span class="section-number-3">5.2.</span> Oracle State Thread</h3>
+<ul>
+<li>Oracle UTXO whose datum will be ADA/USD exchange rate</li>
+<li>Only admin should be able to push changes on the oracle datum</li>
+<li>Multiple admin support</li>
+<li>Optimization through dynamic redeemer construction for multi-admin
+script</li>
+
+</ul>
+</section>
+<section id="slide-orgdad11a0">
+<h3 id="orgdad11a0"><span class="section-number-3">5.3.</span> Collateral script</h3>
+</section>
+<section id="slide-org0a06537">
+<h3 id="org0a06537"><span class="section-number-3">5.4.</span> Mint script</h3>
+</section>
+<section id="slide-org3364e9b">
+<h3 id="org3364e9b"><span class="section-number-3">5.5.</span> Redesign with Zero Withdrawal</h3>
+</section>
+</section>
+</div>
+</div>
+<script src="./reveal.js/dist/reveal.js"></script>
+<script src="./reveal.js/plugin/highlight/highlight.js"></script>
+<script src="./reveal.js/plugin/notes/notes.js"></script>
+
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+plugins: [RevealHighlight, RevealNotes],
+transition: 'none'
+});
+
+</script>
+</body>
+</html>

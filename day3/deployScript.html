@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body>
+    <div id="button-container"></div>
+    <div id="status"></div>
+
+    <script type="module" src="./lucid.mjs"></script>
+    <script type="module">
+      let lucid = null;
+
+      let alwaysFail = {
+	  type: "PlutusV3",
+	script: "587501010032323232323225333002323232323253330073370e900118041baa0011323232326533300a3370e900018059baa0051533300d300c375400a2930b0b18069807001180600098049baa00116300a300b0023009001300900230070013004375400229309b2b2b9a5573aaae7955cfaba15745"
+      }
+      let smartContract = (L, utxo) => {
+        return {
+	  type: "PlutusV3",
+	  script: L.applyParamsToScript(
+	    "59045e010100323232323232322322322533300632323232323232323232532323330123001007132325333014323300100137586010602e6ea8038894ccc064004528099299980b99baf300a3019375460380046012660366ea4054cc06cdd4009a5eb80528899801801800980e0008a511323232533301a301d0021323232533301d3020002132533301b3370e9002180e1baa00113232533301d3370e9002180f1baa00113232323253330213370e66e00005200230020041533302132323375e6e9ccc00402000cdd3998008030019800800911299981219b890014800052f5c02a66604e004297ae01330283029002333003003302a002337000029000899299981118091998009bab301630243754602c60486ea803004122100130123330013756602c60486ea80240412210014a044464a66604a602a604c6ea8004520001375a6054604e6ea8004c94ccc094c054c098dd50008a60103d87a8000132330010013756605660506ea8008894ccc0a8004530103d87a8000132323232533302b337220100042a66605666e3c0200084c074cc0bcdd4000a5eb80530103d87a8000133006006003375a60580066eb8c0a8008c0b8008c0b0004cc05400c0085280a50300100530010012253330230011480004cdc02400466004004604c0026eb0c088c07cdd50008b1802980f1baa00337586040603a6ea800458c00cc070dd51807180e1baa00416301e001330043758600260346ea80448cdd79806180d9baa300c301b375400266e9520023301d375200e97ae02301d301e301e00116301b0013300137586010602e6ea80388cdd79804980c1baa300930183754601460306ea8004cdd2a4004660346ea40112f5c044646600200200644a666036002297ae013232533301a300500213301e00233004004001133004004001301f002301d00153330133002301437540142a66602c602a6ea80285261616375c602e60286ea802054ccc048c00801c4c8c8c8c8c94ccc05cc018c060dd5000899299980c1804180c9baa00113232533301d302000213370e6eb4c070005200116301e0013253330193009301a3754002297adef6c6013756603c60366ea8004cc024dd5980e980f180f180f180f180d1baa011375c603a60346ea800458c028c064dd51805180c9baa300b30193754603860326ea800458c8cc004004dd61805180c9baa01022533301b00114c103d87a800013232533301a3375e601a60386ea800801c4c030cc0780092f5c0266008008002603e004603a002a66602a6008602c6ea803054ccc060c05cdd50060a4c2c2c60326034004603000260286ea802058dc3a40006e1d200222323300100100322533301600114c0103d87a800013232323253330173372200e0042a66602e66e3c01c0084c024cc06cdd3000a5eb80530103d87a8000133006006003375660300066eb8c058008c068008c060004dd2a40004602600246024602600260186ea8004c03cc040008c038004c038008c030004c020dd50008a4c26cac6eb4004dd7000ab9a5573aaae7955cfaba05742ae881",
+	    [utxo.txHash, BigInt(utxo.outputIndex)]
+	  ),
+	}
+      }
+
+      const mintTickets = async (L, lucid) => {
+	const uniqRef = (await lucid.wallet().getUtxos())[0];
+
+	const lapisApplied = smartContract(L, uniqRef)
+	const lapisCurrencySymbol = L.mintingPolicyToId(lapisApplied)
+	const lapisAddress = L.validatorToAddress(lucid.config().network, lapisApplied)
+	const alwaysFailAddress = L.validatorToAddress(lucid.config().network, alwaysFail)
+	const tx = await lucid.newTx()
+	      .collectFrom([uniqRef])
+	      .pay.ToContract(alwaysFailAddress, undefined, undefined, lapisApplied)
+	      .pay.ToContract(lapisAddress, {
+		kind: "inline",
+		value: L.Data.to([])
+	      }, {
+		[lapisCurrencySymbol+L.fromText("")]: 1n
+	      }, undefined)
+	      .mintAssets({
+		[lapisCurrencySymbol+L.fromText("")]: 1n,
+		[lapisCurrencySymbol+L.fromText("helloworld")]: 20n
+	      }, L.Data.to(new L.Constr(0, [])))
+	      .attach.MintingPolicy(lapisApplied)
+	      .complete()
+	const signed = await tx.sign.withWallet().complete()
+	const hash = await signed.submit()
+	console.log(hash)
+	await lucid.awaitTx(hash, 40_000)
+	console.log("confirmed")
+
+	const allUtxos = await lucid.utxosAt(alwaysFailAddress);
+	console.log(allUtxos)
+	const refScriptUtxos = allUtxos.filter((utxo) => utxo.scriptRef.script == lapisApplied.script)[0];
+
+	console.log("ticket currency symbol: ", lapisCurrencySymbol)
+	console.log("contract reference script: ", refScriptUtxos)
+      }
+
+      const container = document.getElementById('button-container');
+      const status = document.getElementById('status');
+      window.addEventListener("load", async () => {
+	const L = await import("./lucid.mjs");
+	await new Promise(resolve => setTimeout(resolve, 100));
+
+	if (window.cardano) {
+	  Object.keys(window.cardano).forEach(name => {
+	    const button = document.createElement('button');
+	    button.textContent = name;
+	    button.addEventListener("click", async () => {
+	      const lucid = await L.Lucid(
+		new L.Maestro({
+		  network: "Preview",
+		  apiKey: "UCrsbRTE8SanjHGO0n02cwVZuIYQB2wv",
+		  turboSubmit: false,
+		}),
+		"Preview"
+	      )
+	      await lucid.selectWallet.fromAPI(await window.cardano[name].enable());
+
+	      console.log(await lucid.wallet().address())
+	      console.log(L.getAddressDetails(await lucid.wallet().address()).paymentCredential.hash)
+	      container.innerHTML = "";
+
+	      mintTickets(L,lucid);
+	    });
+	    container.appendChild(button);
+	    console.log(container)
+	  });
+	} else {
+	  console.error("No Cardano wallet found.");
+	}
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body>
+    <div id="button-container"></div>
+    <div id="status"></div>
+
+    <script type="module" src="./lucid.mjs"></script>
+    <script type="module">
+      const network = "Preview";
+
+      let lapisRef = {
+	txHash: "ae17ad09304d4e52d35eeb078a54e852e22b7863ea782623200ebd60203cbfda",
+	outputIndex: 0
+      }
+
+      const writeName = async (L, lucid) => {
+	const newMessage = "world"
+
+	const [lapisScriptRefUtxo] = await lucid.utxosByOutRef([lapisRef])
+	const lapisScript = lapisScriptRefUtxo.scriptRef
+	const lapisCS = L.mintingPolicyToId(lapisScript)
+	const lapisAddress = L.validatorToAddress(lucid.config().network, lapisScript)
+
+	const lapisUtxo = await lucid.utxoByUnit(lapisCS)
+
+	const tx = await lucid.newTx()
+	      .readFrom([lapisScriptRefUtxo])
+	      .collectFrom([lapisUtxo], L.Data.to(new L.Constr(0, [])))
+	      .pay.ToContract(lapisAddress, {
+		kind: "inline",
+		value: L.Data.to([...L.Data.from(lapisUtxo.datum), L.fromText(newMessage)])
+	      }, {
+		[lapisCS+L.fromText("")]: 1n
+	      }, undefined)
+	      .mintAssets({[lapisCS+L.fromText("helloworld")]: -1n}, L.Data.to(new L.Constr(0, [])))
+	      .complete()
+	const signed = await tx.sign.withWallet().complete()
+	const hash = await signed.submit()
+	console.log(hash)
+	await lucid.awaitTx(hash, 40_000)
+	console.log("confirmed")
+      }
+
+      const container = document.getElementById('button-container');
+      const status = document.getElementById('status');
+      window.addEventListener("load", async () => {
+	const L = await import("./lucid.mjs");
+	await new Promise(resolve => setTimeout(resolve, 100));
+
+	if (window.cardano) {
+	  Object.keys(window.cardano).forEach(name => {
+	    const button = document.createElement('button');
+	    button.textContent = name;
+	    button.addEventListener("click", async () => {
+	      const lucid = await L.Lucid(
+		new L.Maestro({
+		  network: network,
+		  apiKey: "UCrsbRTE8SanjHGO0n02cwVZuIYQB2wv",
+		  turboSubmit: false,
+		}),
+		network
+	      )
+	      await lucid.selectWallet.fromAPI(await window.cardano[name].enable());
+
+	      console.log(await lucid.wallet().address())
+	      console.log(L.getAddressDetails(await lucid.wallet().address()).paymentCredential.hash)
+	      container.innerHTML = "";
+
+	      writeName(L,lucid);
+	    });
+	    container.appendChild(button);
+	    console.log(container)
+	  });
+	} else {
+	  console.error("No Cardano wallet found.");
+	}
+      });
+    </script>
+  </body>
+</html>

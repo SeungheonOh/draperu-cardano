@@ -1,0 +1,4 @@
+* Useful links
+https://github.com/Anastasia-Labs/lucid-evolution/blob/main/packages/lucid/src/tx-builder/TxBuilder.ts
+https://github.com/Anastasia-Labs/lucid-evolution/blob/main/packages/core-types/src/types.ts
+https://github.com/Anastasia-Labs/lucid-evolution/blob/main/packages/lucid/src/lucid-evolution/LucidEvolution.ts

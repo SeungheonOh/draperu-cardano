@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@lucid-evolution/lucid": "^0.4.27",
+    "vite": "^6.3.2",
+    "vite-plugin-node-polyfills": "^0.23.0",
+    "vite-plugin-wasm": "^3.4.1"
+  }
+}

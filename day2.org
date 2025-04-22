@@ -1,0 +1,138 @@
+#+MACRO: LN @@latex:\\@@ @@html:<br>@@ @@ascii:|@@
+
+#+TITLE: Builder Week {{{LN}}} Day 2
+#+OPTIONS: toc:nil
+#+REVEAL_PLUGINS: (highlight notes)
+#+REVEAL_THEME: white
+#+REVEAL_INIT_OPTIONS: transition: 'none'
+
+* Agenda
+- Smart Contracts
+- Protocol Development
+- _Testing Strategies_
+- _Script Execution Cost_
+
+* Smart Contracts
+** What is smart contract?
+#+begin_notes
+  "casher" in banks; they will give("release") assets if everything
+  checks out
+
+  connect notepad, draw diagrams
+#+end_notes
+** UPLC
+#+begin_src
+  Term L, M, N :=
+      x                      // variable
+     (con T c)               // constant
+     (builtin b)             // builtin
+     (lam x M)               // lambda abstraction
+     [M N]                   // function application
+     (delay M)               // delay execution of a term
+     (force M)               // force execution of a term
+     (constr k M0 ... Mm-1)  // constr with tag k and m arguments
+     (case M N0 ... Nm-1)    // case analysis with m alternatives
+     (error)                 // error
+#+end_src
+** UPLC - Example
+#+begin_src
+(program 1.1.0
+  (lam x
+    (force
+      [(force (builtin IfThenElse))
+        [(builtin EqualsInteger) x (con integer 42)]
+        (delay (con unit))
+        (delay (error))
+      ]
+    )
+  )
+)
+#+end_src
+#+begin_notes
+  Returns unit if given argument is 42, fails if it is not.
+  note the use of force and delay.
+#+end_notes
+** UPLC - Flat Encoding
+#+begin_src
+  5201010025980099b870014815229345957341
+#+end_src
+#+begin_src
+-- version
+00000001
+00000001
+00000000
+
+0010                                  -- lambda abstraction
+  0101                                -- force
+    0011                              -- apply
+      0011                            -- apply
+        0011                          -- apply
+          0101                        -- force
+            0111 0011010              -- builtin IfThenElse
+          0011                        -- apply
+            0011                      -- apply
+              0111 0000111            -- builtin EqualsInteger
+              0000 00000001           -- variable index 1
+            0100 1 0000 0010101 00    -- constant integer 42
+          0001                        -- delay
+            0100 1 0011 0             -- constant unit
+        0001                          -- delay
+          0110                        -- error
+000001 -- padding
+#+end_src
+
+Pretty simple :)
+
+#+begin_notes
+  Smart contracts are encoded in binary flat serialization format,
+  that's what ledger stores.
+#+end_notes
+
+* Smart Contract Development with Aiken
+** Aiken Setup
+https://aiken-lang.org/installation-instructions
+
+#+BEGIN_SRC bash
+# Linux / MacOS
+curl --proto '=https' --tlsv1.2 -LsSf https://install.aiken-lang.org | sh
+
+# Windows
+powershell -c "irm https://windows.aiken-lang.org | iex"
+#+END_SRC
+** Initializing Aiken Project
+#+begin_src bash
+  aiken new <your_name>/<project_name>
+#+end_src
+** House Keeping
+#+begin_src bash
+  # Regular build
+  aiken build
+
+  # To make it re-run everytime new changes are made
+  aiken build -w
+
+  # Just run type checker
+  aiken check
+#+end_src
+** Documentations
+Other language/LSP/package manager features can be found on
+
+https:www.aiken-lang.org
+
+To try Aiken without local installation, you can try
+
+http:play.aiken-lang.org
+
+* NFT script
+
+* "Stable Coin" (from PPP)
+** Activity
+** Oracle State Thread
+- Oracle UTXO whose datum will be ADA/USD exchange rate
+- Only admin should be able to push changes on the oracle datum
+- Multiple admin support
+- Optimization through dynamic redeemer construction for multi-admin
+  script
+** Collateral script
+** Mint script
+** Redesign with Zero Withdrawal
