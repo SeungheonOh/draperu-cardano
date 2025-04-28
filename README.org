@@ -1,0 +1,66 @@
+#+title: Cardano Developer Pack
+#+options: toc:1
+
+Rendered version is at http://www.sh5.org/draperu-cardano
+
+This document curates useful documentations, repositories, and resources for developing new projects on the Cardano ecosystem.
+
+* Onchain development
+For each protocol, it is important to determine the balance between on-chain and off-chain enforcement. If all rules are enforced off-chain, the protocol becomes centralized, with a single entity controlling all operations — as seen with centralized exchanges. Conversely, if all rules are enforced on-chain, anyone can submit transactions that interact with the protocol. While greater decentralization is generally preferred, increased on-chain enforcement adds complexity to both the smart contract and off-chain infrastructure, and can introduce challenges when modifying or updating validation logic after deployment. Therefore, it is crucial to carefully define the scope of rule enforcement early in the smart contract development process.
+
+The best practice I recommend is to first lay out all business logic before starting development. While the specifics will vary by project, the essential idea is to define the general workflows that the protocol wants users to follow.
+
+For example, in a linear vesting protocol, the business logic might be organized into two primary workflows: "locking", which locks assets into a vesting script, and "release", which releases a partial amount from the locking script. Additional business rules could include:
+- Asset release can only begin after a specified time period XYZ,
+- Subsequent releases can only occur a certain amount of time ABC after the previous release,
+- Only a designated address EFG can receive the vested assets,
+- Only stablecoins can be used for linear vesting, and so forth.
+
+Once all business logic is outlined, it is important to decide which parts should be enforced on-chain versus off-chain. For example, "only address EFG can receive the vesting" should be enforced on-chain to ensure maximum security — otherwise, anyone who can construct a valid release transaction could potentially withdraw assets from the vesting pool.
+
+On the other hand, rules like "only stablecoins can be used for linear vesting" could be enforced off-chain. Since the vesting pool does not accept additional deposits after its creation, the off-chain application only needs to verify that users deposit stablecoins during pool creation. Even if a user deposits a non-stablecoin by bypassing the front-end, it would not significantly compromise the protocol’s security.
+
+Linear vesting is a relatively simple example; however, the division between on-chain and off-chain enforcement will vary greatly depending on the nature of the project. Some projects might not require a smart contract at all, while others may need every rule to be strictly enforced on-chain.
+
+The general best practice is to first document all business logic thoroughly, clearly distinguishing which rules will be enforced on-chain and which will be handled off-chain. Only after reaching a clear understanding of the on-chain enforcement requirements should on-chain script development begin. This clear foundation not only makes the on-chain development a straightforward, "connect the dots" process but also serves as a valuable reference when writing test cases for both on-chain and off-chain components.
+
+** [[https://aiken-lang.org/installation-instructions][Aiken Documentation]] & [[https://aiken-lang.github.io/stdlib/][Aiken Standard Library Documentation]]
+  Reviews aiken basics and some of the design patterns for writing smart contracts.
+** [[https://github.com/aikenastasia][Anastasia Labs Aiken Demos]]
+  Gives more code-oriented overview of the Aiken language.
+** [[https://github.com/plutonomicon/plutonomicon][Plutonomicon]]
+  Contains general smart contract design patterns and low-level UPLC documentation.
+  Some information might be old/irrelevant.
+** [[https://github.com/Anastasia-Labs/design-patterns][Design-Patterns]]
+  Contains smart contract design patterns. Generally more relevant than Plutonomicon
+
+* Offchain Development
+There are multiple libraries for developing offchain transaction-building code. In the Builder Week program, we used Lucid Evolution, but other options can also be explored. All options below follow a similar transaction-builder design but differ in how the transaction builder is interfaced.
+
+** [[https://anastasia-labs.github.io/lucid-evolution][Lucid-Evolution]]
+Examples can be found in the documentation page under "example" section
+** [[https://meshjs.dev][MeshJS]]
+Examples can be found [[https://github.com/MeshJS/examples][here]]
+** [[https://github.com/geniusyield/atlas][Atlas]] - Haskell!
+** [[https://github.com/Plutonomicon/cardano-transaction-lib/][Cardano Transaction Lib]] - PureScript
+
+* Infrastructure
+Sometimes, it can be more cost-effective to run node and indexer services on your own infrastructure instead of using SaaS providers like Blockfrost or Maestro. Currently, the only service that can be easily hosted locally is Blockfrost via [[https://github.com/blockfrost/blockfrost-backend-ryo][blockfrost-backend-ryo]]. The API that blockfrost-ryo exposes is the same as the SaaS version; however, some endpoints, such as transaction evaluation and submission, will not work and would need to be handled manually through Ogmios.
+
+To run blockfrost-ryo, the infrastructure also needs to run Cardano Node, DBSync, and Ogmios (for transaction submission). DBSync is quite heavy and requires a large amount of disk space; therefore, running both the node and DBSync would require a server with at least 1 TB of fast SSD storage, along with a sufficiently powerful CPU and ample memory.
+
+Kupo is also a viable alternative to blockfrost-ryo; however, it requires some form of query caching, as Kupo itself is not designed to handle a high volume of queries directly.
+
+* Chain Follower
+Generally, it is sufficient to use the following libraries alongside a Cardano API SaaS provider (such as Blockfrost or Maestro). However, if your project requires faster transaction building, faster UTXO queries, or other specific needs, the best approach is to write a custom chain follower. Chain followers allow you to index only specific UTXOs on the ledger in real time as new blocks are added to the chain.
+
+Running a chain follower for your service requires running a Cardano Node backend, as it needs live data from the network. This can become costly, so it is important to carefully weigh the benefits and costs of implementing a chain follower before committing.
+
+There are not many off-the-shelf solutions for chain follower. One of few available is TxPipe's [[https://oura.txpipe.io/][oura]]. Other option is to use Ogmios' websocket api direction.
+
+* Governance
+Many protocols implement onchain governance (called a DAO, short for Decentralized Autonomous Organization), delegating some of the major decisions for the protocol to stakeholders (those who hold the protocol token). For instance, [[https://v2.liqwid.finance/governance][Liqwid]], a lending and borrowing protocol, decides on market parameter changes, market creation, market delisting, and other protocol-related decisions using its DAO.
+
+To implement a similar DAO for another project, one can use the open-source governance library [[https://github.com/liqwid-labs/agora][Agora]]. Agora provides several scripts that coordinate proposal creation, token staking, voting, voting power delegation, treasury management, and more. However, Agora only provides the onchain scripts; the off-chain logic must be built manually according to its specification.
+
+To avoid implementing an off-chain solution for Agora from scratch, [[https://www.clarity.vote/][Clarity]] offers a more refined solution for onchain governance. Clarity provides an Agora-based DAO as a service, complete with a ready-to-use web application, API endpoints, and SDK.
